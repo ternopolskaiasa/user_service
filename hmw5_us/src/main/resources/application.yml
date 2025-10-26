@@ -4,13 +4,47 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+  cloud:
+    gateway:
+      routes:
+        - id: users-service
+          uri: lb://USERS-SERVICE
+          predicates:
+            - Path=/api/users/**
+    config:
+      server:
+              git:
+                uri: https://github.com/ternopolskaiasa/user_service.git
+                searchPaths: '{profile}'
+      uri: http://localhost:8888
+      label: master
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
   kafka:
     bootstrap-servers: localhost:9092
+  application:
+    name: USERS-SERVICE
+  resilience4j:
+    circuitbreaker:
+      instances:
+        backendA:
+          registerHealthIndicator: true
+          slidingWindowSize: 10
+          minimumNumberOfCalls: 5
+          waitDurationInOpenState: 60s
+          failureRateThreshold: 50%
 logging:
   level:
     root: INFO
     org.springframework.kafka: DEBUG
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+server:
+  port: ${PORT:8080}
+

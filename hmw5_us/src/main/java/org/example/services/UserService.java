@@ -1,5 +1,6 @@
 package org.example.services;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
 import org.example.events.UserEventPublisher;
@@ -21,6 +22,7 @@ public class UserService {
         this.validator = validator;
     }
 
+    @CircuitBreaker(name = "userServiceCreate", fallbackMethod = "fallbackCreateUser")
     public User createUser(User user) {
         validator.validate(user);
         User savedUser = userRepository.save(user);
@@ -28,6 +30,7 @@ public class UserService {
         return savedUser;
     }
 
+    @CircuitBreaker(name = "userServiceUpdate", fallbackMethod = "fallbackUpdateUser")
     public User updateUser(long id, User updatedUser) {
         Optional<User> existingUserOpt = userRepository.findById(id);
         if (existingUserOpt.isEmpty()) {
@@ -45,10 +48,12 @@ public class UserService {
         return updated;
     }
 
+    @CircuitBreaker(name = "userServiceFind", fallbackMethod = "fallbackFindUserById")
     public Optional<User> findUserById(long id) {
         return userRepository.findById(id);
     }
 
+    @CircuitBreaker(name = "userServiceDelete", fallbackMethod = "fallbackDeleteUser")
     public void deleteUser(long id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) {
